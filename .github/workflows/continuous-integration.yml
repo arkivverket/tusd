@@ -9,7 +9,8 @@ env:
 
 jobs:
   test:
-    name: Test code
+    name: Test and vet
+    runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
         go-version:
@@ -19,7 +20,6 @@ jobs:
           - ubuntu-latest
           # - macos-latest
           # - windows-latest
-    runs-on: ${{ matrix.platform }}
     steps:
       -
         name: Checkout code
@@ -32,8 +32,44 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       -
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
+            ${{ runner.os }}-go-
+
+      -
         name: Test code
         run : |
           echo "GO111MODULE" $GO111MODULE
           go test ./pkg/...
           go vet ./pkg/...
+
+  build:
+    needs: test
+    name: Building binaries
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v2
+
+      -
+        name: Install Matrix Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+
+      -
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      -
+        name: Build TUSD
+        run: ./scripts/build_all.sh
