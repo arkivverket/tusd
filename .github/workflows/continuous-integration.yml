@@ -44,7 +44,6 @@ jobs:
       -
         name: Test code
         run : |
-          echo "GO111MODULE" $GO111MODULE
           go test ./pkg/...
           go vet ./pkg/...
 
