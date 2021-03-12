@@ -37,8 +37,9 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-${{ matrix.go-version }}-
-            ${{ runner.os }}-go-
+            ${{ runner.os }}-test-go-${{ matrix.go-version }}-
+            ${{ runner.os }}-test-go-
+            ${{ runner.os }}-test-
 
       -
         name: Test code
