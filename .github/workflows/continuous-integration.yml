@@ -8,48 +8,48 @@ env:
   GO111MODULE: on
 
 jobs:
-  test:
-    name: Test and vet
-    runs-on: ${{ matrix.platform }}
-    strategy:
-      fail-fast: false
-      matrix:
-        go-version:
-          - 1.12.x
-          - 1.13.x
-        platform:
-          - ubuntu-latest
-          # - macos-latest
-          # - windows-latest
-    steps:
-      -
-        name: Checkout code
-        uses: actions/checkout@v2
+  # test:
+  #   name: Test and vet
+  #   runs-on: ${{ matrix.platform }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       go-version:
+  #         - 1.12.x
+  #         - 1.13.x
+  #       platform:
+  #         - ubuntu-latest
+  #         # - macos-latest
+  #         # - windows-latest
+  #   steps:
+  #     -
+  #       name: Checkout code
+  #       uses: actions/checkout@v2
 
-      -
-        name: Install Matrix Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ matrix.go-version }}
+  #     -
+  #       name: Install Matrix Go
+  #       uses: actions/setup-go@v2
+  #       with:
+  #         go-version: ${{ matrix.go-version }}
 
-      -
-        uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-test-go-${{ matrix.go-version }}-
-            ${{ runner.os }}-test-go-
-            ${{ runner.os }}-test-
+  #     -
+  #       uses: actions/cache@v2
+  #       with:
+  #         path: ~/go/pkg/mod
+  #         key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-test-go-${{ matrix.go-version }}-
+  #           ${{ runner.os }}-test-go-
+  #           ${{ runner.os }}-test-
 
-      -
-        name: Test code
-        run : |
-          go test ./pkg/...
-          go vet ./pkg/...
+  #     -
+  #       name: Test code
+  #       run : |
+  #         go test ./pkg/...
+  #         go vet ./pkg/...
 
   build:
-    needs: test
+    # needs: test
     name: Building binaries
     runs-on: ubuntu-latest
     steps:
@@ -73,4 +73,29 @@ jobs:
 
       -
         name: Build TUSD
-        run: ./scripts/build_all.sh
+        run: |
+          ./scripts/build_all.sh
+          ./scripts/pack_all.sh
+
+      -
+        uses: actions/upload-artifact@v2
+        with:
+          name: tusd_builds
+          path: tusd_*.*
+
+  downlaod:
+    name: Download artifacts
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v2
+
+      -
+        name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: tusd_builds
+
+      - run: ls -la
